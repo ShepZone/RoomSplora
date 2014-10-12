@@ -8,6 +8,10 @@
 #define JOYSTICK_RANGE_IN    510
 #define JOYSTICK_RANGE_OUT_X 2000
 #define JOYSTICK_RANGE_OUT_Y 500
+#define TOLERANCE_X          50
+#define TOLERANCE_Y          50
+#define LIMIT_LEFT           500
+#define LIMIT_RIGHT          500
 
 SoftwareSerial XBee = SoftwareSerial(PIN_XBEE_RX, PIN_XBEE_TX);
 unsigned long dlyJoy = 0;
@@ -136,9 +140,49 @@ void loop()
 void SendMappings()
 {
     String str = "|";
-    str += mapJoyX();
+    short x = mapJoyX();
+    short y = mapJoyY();
+
+    if(abs(x) <= TOLERANCE_X)
+    {
+        x = 0;
+    }
+
+    if(abs(y) <= TOLERANCE_Y)
+    {
+        y = 0;
+    }
+
+    short left = y + x;
+    short right = y - x;
+
+    if(abs(left) > LIMIT_LEFT)
+    {
+        if(left > LIMIT_LEFT)
+        {
+            left = LIMIT_LEFT;
+        }
+        else
+        {
+            left = 0 - LIMIT_LEFT;
+        }
+    }
+
+    if(abs(right) > LIMIT_RIGHT)
+    {
+        if(right > LIMIT_RIGHT)
+        {
+            right = LIMIT_RIGHT;
+        }
+        else
+        {
+            right = 0 - LIMIT_RIGHT;
+        }
+    }
+
+    str += left;
     str += "|";
-    str += mapJoyY();
+    str += right;
     str += "|";
     str += DBtn(tglJoy);
     str += DBtn(tglUp);
@@ -164,7 +208,7 @@ char* DBtn(boolean btn)
 
 short mapJoyX()
 {
-    return map(Esplora.readJoystickX(), -512, 511, 2000, -2000);
+    return map(Esplora.readJoystickX(), -512, 511, 500, -500);
 }
 
 short mapJoyY()
